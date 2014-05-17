@@ -1,0 +1,9 @@
+Dijkstra allows assigning distances other than 1 for each step. For example, in routing the distances (or weights) could be assigned by speed, cost, preference, etc. The algorithm then gives you the shortest path from your source to every node in the traversed graph.
+
+Meanwhile BFS basically just expands the search by one “step” (link, edge, whatever you want to call it in your application) on every iteration, which happens to have the effect of finding the smallest number of steps it takes to get to any given node from your source (“root”).
+
+You can implement Dijkstra's algorithm as BFS with a priority queue (though it's not the only implementation).
+
+Dijkstra's algorithm relies on the property that the shortest path from s to t is also the shortest path to any of the vertices along the path. This is exactly what BFS does.
+
+Or in another perspective: how would Dijkstra's algorithm behave if all the weights were 1? Exactly like BFS.
