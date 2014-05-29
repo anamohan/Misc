@@ -10,6 +10,24 @@ struct node {
 	struct node *next;
 };
 
+struct DLL {
+    int data;
+    struct DLL *next;
+    struct DLL *prev;
+};
+
+struct list {
+    int data;
+    struct list *next;
+    struct list *child;
+};
+
+struct NNode {
+    int data;
+    struct Node *right;
+    struct Node *down;
+};
+
 // Write a Count() function that counts the number of times a given int occurs in a list. The
 // code for this has the classic list traversal structure as demonstrated in Length().
 
@@ -553,9 +571,242 @@ void quickSort(struct node **headRef) {
 // Given a linked list and two integers M and N. 
 // Traverse the linked list such that you retain M nodes then delete next N nodes, 
 // continue the same till end of the linked list.
+void skipMdeleteN(struct node  *head, int M, int N) {
+	if (head == NULL) return;
+	struct node *current = head, *next;
+	while (current) {
+		for (int i = 1; i < M && current != NULL; i++) {
+			current = current->next;
+		}
+		if (current == NULL) return;
+		*next = current->next;
+
+		for (int i = 1; i < N && next != NULL; i++) {
+			struct node *temp = next;
+			next = next->next;
+			free(temp);
+		}
+
+		current->next = next;
+		current = next;
+	}
+}
+
+// How to implement a stack which will support following operations in O(1) time complexity?
+// 1) push() which adds an element to the top of stack.
+// 2) pop() which removes an element from top of stack.
+// 3) findMiddle() which will return middle element of the stack.
+// 4) deleteMiddle() which will delete the middle element.
+// Push and pop are standard stack operations.
+
+// The important question is, whether to use a linked list or array for implementation of stack?
+
+// Please note that, we need to find and delete middle element. 
+// Deleting an element from middle is not O(1) for array. 
+// Also, we may need to move the middle pointer up when we push an element 
+// and move down when we pop(). 
+// In singly linked list, moving middle pointer in both directions is not possible.
+
+// The idea is to use Doubly Linked List (DLL). 
+// We can delete middle element in O(1) time by maintaining mid pointer. 
+// We can move mid pointer in both directions using previous and next pointers.
+
+// TODO
+
+// Swap Kth node from beginning with Kth node from end in a Linked List
+// Given a singly linked list, swap kth node from beginning with kth node from end. 
+// Swapping of data is not allowed, only pointers should be changed. 
+// This requirement may be logical in many situations where the linked list data part is huge 
+// (For example student details line Name, RollNo, Address, ..etc). 
+// The pointers are always fixed (4 bytes for most of the compilers).
+
+int countNodes(struct node *head) {
+	int count = 0;
+	while (head != NULL) {
+		head = head->next;
+		count++;
+	}
+	return count;
+}
+void swap(struct node **headRef, int k) {
+	int n = countNodes(*headRef);
+
+	if (n < k) return;
+
+	// if x (kth node from start) and y (kth node from end)
+	// are same
+	if (2*k - 1 == n) return;
+
+	node *x = *headRef;
+	node *x_prev = NULL;
+
+	for (int i = 1; i < k; i++) {
+		x_prev = x;
+		x = x->next;
+	}
+
+	node *y = *headRef;
+	node *y_prev = NULL;
+
+	for (int i = 1; i < n - k + 1; i++) {
+		y_prev = y;
+		y = y->next;
+	}
+
+	// If x_prev exists then new next of it 
+	// will be y. Consider the case when y->next
+	// is x, in this case, x_prev and y are same
+	// So it creates a self loop
+	// This self loop will be broken 
+	// when we change y->next
+	if (x_prev) {
+		x_prev->next = y;
+	}
+	if (y_prev) {
+		y_prev->next = x;
+	}
+
+	node *temp = x->next;
+	x->next = y->next;
+	y->next = temp;
+
+	if (k == 1) {
+		*headRef = y;
+	}
+	if (k == n) {
+		*headRef = x;
+	}
+} 
+
+// QuickSort on Doubly Linked List
+struct DLL *lastNode(DLL *root) {
+    while (root && root->next)
+        root = root->next;
+    return root;
+}
+
+void swap(int* a, int* b) { 
+	int t = *a;      
+	*a = *b;       
+	*b = t;   
+}
+
+DLL *partition(DLL *start, DLL *end) {
+	int pivot = end->data;
+	DLL *i = start->prev;
+
+	for (DLL *j = start; j != end; j = j->next) {
+		if (j->data <= x) {
+			i = (i == NULL) ? start : i->next;
+			swap(&(i->data), &(j->data));
+		}
+	}
+	i = (i == NULL) ? start : i->next;
+	swap(&(i->data), &(end->data));
+	return i;
+}
+
+void _quickSort(DLL *start, DLL *end) {
+	if (end != NULL && start != end  
+		&& start != end->next) {
+		struct node *p = partition(start, end);
+	_quickSort(start, p->prev);
+	_quickSort(p->next, end);
+	}
+}
+
+void quickSort(DLL *head) {
+	_quickSort(head, lastNode(head));
+}
 
 
- 
+// Flatten a multilevel linked list
+// Given a linked list where in addition to the next pointer, 
+// each node has a child pointer, which may or may not point to a separate list. 
+// These child lists may have one or more children of their own, and so on, to produce a multilevel data structure, 
+// as shown in below figure.You are given the head of the first level of the list. 
+// Flatten the list so that all the nodes appear in a single-level linked list. 
+// You need to flatten the list in way that all nodes at first level should come first, then nodes of second level, and so on.
+
+// Each node is a C struct with the following definition.
+
+// struct list
+// {
+//     int data;
+//     struct list *next;
+//     struct list *child;
+// };
+
+void flattenList(struct list *head) {
+	if (head == NULL) return;
+
+	struct node *temp,*tail = head;
+
+	while (tail->next != NULL) {
+		tail = tail->next;
+	}
+
+	struct list *current = head;
+
+	while (current != tail) {
+		if (current->child != NULL) {
+			tail->next = current->child;
+			temp = current->child;
+
+			while (temp->next) {
+				temp = temp->next;
+			}
+			tail = temp;
+		}
+		current = current->next;
+	}
+}
+
+// Add two numbers represented by linked lists 
+// TODO
+
+// Flattening a Linked List
+// Given a linked list where every node represents a linked list and contains two pointers of its type:
+// (i) Pointer to next node in the main list (we call it ‘right’ pointer in below code)
+// (ii) Pointer to a linked list where this node is head (we call it ‘down’ pointer in below code).
+// All linked lists are sorted. See the following example
+
+//        5 -> 10 -> 19 -> 28
+//        |    |     |     |
+//        V    V     V     V
+//        7    20    22    35
+//        |          |     |
+//        V          V     V
+//        8          50    40
+//        |                |
+//        V                V
+//        30               45
+// Write a function flatten() to flatten the lists into a single linked list. 
+// The flattened linked list should also be sorted. 
+// For example, for the above input list, 
+// output list should be 5->7->8->10->19->20->22->28->30->35->40->45->50.
+
+NNode *merge(NNode *a, NNode *b) {
+	if (a == NULL || b == NULL) {
+		return (a == NULL) ? b : a;
+	}
+
+	NNode *result;
+	if (a->data < b->data) {
+		result = a;
+		result->down = merge(a->down, b);
+	} else {
+		result = b;
+		result->down = merge(a, b->down);
+	}
+	return result;
+}
+
+NNode *flatten(NNode *root) {
+	if (root == NULL || root->right == NULL) return root;
+	return merge(root, flatten(root->right));
+}
+
 int main() {
 	return 0;
 }
