@@ -379,6 +379,183 @@ void RecursiveReverse(struct node** headRef) {
 	*headRef = rest;
 }
 
+// Given a linked list, reverse alternate nodes and append them to end of list. 
+// Extra allowed space is O(1) 
+// Examples
+
+// Input List:  1->2->3->4->5->6
+// Output List: 1->3->5->6->4->2
+
+// Input List:  12->14->16->18->20
+// Output List: 12->16->20->18->14
+
+// The idea is to maintain two linked lists, 
+//  one list of all odd positioned nodes (1, 3, 5 in above example) 
+//   and other list of all even positioned nodes (6, 4 and 2 in above example). Following are detailed steps.
+// 1) Traverse the given linked list which is considered as odd list. 
+//     Do following for every visited node.
+// a) If the node is even node, remove it from odd list 
+//     and add it to the front of even node list. 
+//     Nodes are added at front to keep the reverse order.
+// 2) Append the even node list at the end of odd node list.
+
+void rearrange(struct node **odd) {
+	if (*odd == NULL || (*odd)->next == NULL || (*odd)->next->next == NULL) return;
+	node *evenNode, *next, *current;
+	evenNode = (*odd)->next;
+	(*odd)->next = (*odd)->next->next;
+	evenNode->next = NULL;
+	
+
+	current = *odd;
+	int pos = 2;
+	while (current != NULL) {
+		if (pos % 2 != 0) {
+			current = current->next;
+		} else {
+			next = current->next;
+			current->next = evenNode;
+			evenNode = current;
+			current = next;
+		}
+		pos++;
+	}
+	current->next = evenNode;
+}
+
+// Given a singly linked list, write a function to swap elements pairwise. 
+// For example, if the linked list is 1->2->3->4->5->6->7 
+// then the function should change it to 2->1->4->3->6->5->7, 
+// and if the linked list is 1->2->3->4->5->6 
+// then the function should change it to 2->1->4->3->6->5
+
+struct node *pairWiseSwap(struct node* head) {
+    // Base Case: The list is empty or has only one node
+    if (head == NULL || head->next == NULL)
+        return head;
+ 
+    // Store head of list after two nodes
+    struct node* rest = head->next->next;
+ 
+    // Change head
+    struct node* newhead = head->next;
+ 
+    // Change next of second node
+    head->next->next = head;
+ 
+    // Recur for remaining list and change next of head
+    head->next = pairWiseSwap(rest);
+ 
+    // Return new head of modified list
+    return newhead;
+}
+
+// Given two linked lists, insert nodes of second list into first list at alternate positions 
+// of first list.
+// For example, if first list is 5->7->17->13->11 
+// and second is 12->10->2->4->6, 
+// the first list should become 5->12->7->10->17->2->13->4->11->6 
+// and second list should become empty.
+void merge(struct node *a, struct node **b) {
+	if (*b == NULL) return;
+	struct node *aCurr = a;
+	struct node *bCurr = b;
+	while (aCurr != NULL && bCurr != NULL) {
+		struct node *aNext = aCurr->next;
+		struct node *bNext = bCurr->next;
+		
+		bCurr->next = aNext;
+		aCurr->next = bCurr;
+
+		bCurr = bNext;
+		aCurr = aNext;
+	}
+	*b = bCurr;
+}
+
+// Returns the last node of the list
+struct node *getTail(struct node *cur) {
+    while (cur != NULL && cur->next != NULL)
+        cur = cur->next;
+    return cur;
+}
+
+// QuickSort on a singly link list
+void partition(struct node *head, struct node *end,
+			struct node **newHead, struct node **newEnd) {
+	struct node *pivot = end;
+	struct node *prev = NULL, *curr = head, *tail = pivot;
+	// During partition, both the head and end of the list might change
+    // which is updated in the newHead and newEnd variables
+    while (curr != pivot) {
+    	
+        if (curr->data < pivot->data) {
+        	if (*newHead == NULL) {
+        		// First node that has a value less than the pivot - becomes
+        		// the new head
+        		*newHead = curr;
+        	} 
+        	prev = curr;
+        	curr = curr->next;
+        } else {
+        	// if curr node is greater than pivot
+        	// Move curr node to next to tail and 
+        	// change tail
+        	if (prev) {
+        		prev->next = curr->next;
+        	}
+        	struct node *temp = curr->next;
+        	curr->next = NULL;
+        	tail->next = curr;
+        	tail = curr;
+        	curr = temp;
+        }
+    }
+    if (*newHead == NULL) {
+    	*newHead = pivot;
+    }
+    *newEnd = tail;
+    return pivot;
+}
+
+struct node *quickSortRecur(struct node *head, struct node *end) {
+	if (head == NULL || head == end) {
+		return head;
+	}
+	node *newHead = NULL, *newEnd = NULL;
+	// Partition the list, newHead and newEnd will be updated
+    // by the partition function
+    struct node *pivot = partition(head, end, &newHead, &newEnd);
+    // If pivot is the smallest element - no need to recur for
+    // the left part.
+    if (newHead != pivot) {
+    	// Set the node before the pivot node as NULL
+    	struct node *temp = newHead;
+    	while (temp->next != pivot) {
+    		temp = temp->next;
+    	}
+    	temp->next = NULL;
+    	newHead = quickSortRecur(newHead, temp);
+    	temp = getTail(newHead);
+    	temp->next = pivot;
+    }
+    pivot->next = quickSortRecur(pivot->next, newEnd);
+    return newHead;
+}
+
+// The main function for quick sort. This is a wrapper over recursive
+// function quickSortRecur()
+void quickSort(struct node **headRef) {
+    (*headRef) = quickSortRecur(*headRef, getTail(*headRef));
+    return;
+}
+
+// Given a linked list and two integers M and N. 
+// Traverse the linked list such that you retain M nodes then delete next N nodes, 
+// continue the same till end of the linked list.
+
+
+ 
 int main() {
 	return 0;
 }
