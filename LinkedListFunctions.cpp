@@ -24,8 +24,8 @@ struct list {
 
 struct NNode {
     int data;
-    struct Node *right;
-    struct Node *down;
+    struct NNode *right;
+    struct NNode *down;
 };
 
 // Write a Count() function that counts the number of times a given int occurs in a list. The
@@ -477,7 +477,7 @@ struct node *pairWiseSwap(struct node* head) {
 void merge(struct node *a, struct node **b) {
 	if (*b == NULL) return;
 	struct node *aCurr = a;
-	struct node *bCurr = b;
+	struct node *bCurr = *b;
 	while (aCurr != NULL && bCurr != NULL) {
 		struct node *aNext = aCurr->next;
 		struct node *bNext = bCurr->next;
@@ -499,7 +499,7 @@ struct node *getTail(struct node *cur) {
 }
 
 // QuickSort on a singly link list
-void partition(struct node *head, struct node *end,
+struct node *partition(struct node *head, struct node *end,
 			struct node **newHead, struct node **newEnd) {
 	struct node *pivot = end;
 	struct node *prev = NULL, *curr = head, *tail = pivot;
@@ -579,7 +579,7 @@ void skipMdeleteN(struct node  *head, int M, int N) {
 			current = current->next;
 		}
 		if (current == NULL) return;
-		*next = current->next;
+		next = current->next;
 
 		for (int i = 1; i < N && next != NULL; i++) {
 			struct node *temp = next;
@@ -696,7 +696,7 @@ DLL *partition(DLL *start, DLL *end) {
 	DLL *i = start->prev;
 
 	for (DLL *j = start; j != end; j = j->next) {
-		if (j->data <= x) {
+		if (j->data <= pivot) {
 			i = (i == NULL) ? start : i->next;
 			swap(&(i->data), &(j->data));
 		}
@@ -709,7 +709,7 @@ DLL *partition(DLL *start, DLL *end) {
 void _quickSort(DLL *start, DLL *end) {
 	if (end != NULL && start != end  
 		&& start != end->next) {
-		struct node *p = partition(start, end);
+		struct DLL *p = partition(start, end);
 	_quickSort(start, p->prev);
 	_quickSort(p->next, end);
 	}
@@ -740,7 +740,7 @@ void quickSort(DLL *head) {
 void flattenList(struct list *head) {
 	if (head == NULL) return;
 
-	struct node *temp,*tail = head;
+	struct list *temp,*tail = head;
 
 	while (tail->next != NULL) {
 		tail = tail->next;
