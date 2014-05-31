@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cassert>
 #include <cstdlib>
+#include <iostream>
 
 using namespace std;
 
@@ -763,7 +764,65 @@ void flattenList(struct list *head) {
 }
 
 // Add two numbers represented by linked lists 
-// TODO
+
+void push(struct node **result, int data) {
+	struct node *newNode = (node*) malloc(sizeof(node));
+	newNode->data = data;
+	newNode->next = *result;
+	*result = newNode;
+}
+struct node *addSameSizeLists(struct node *head1, struct node* head2, int *carry) {
+	if (head1 == NULL) return NULL;
+	struct node *result = (node*) malloc(sizeof(node));
+	result->next = addSameSizeLists(head1->next, head2->next, carry);
+	int sum = head1->data + head2->data + *carry;
+	*carry = sum / 10;
+	sum = sum % 10;
+	result->data = sum;
+	return result;
+}
+
+void addCarryToRemaining(struct node *head1, struct node *current, 
+						 int *carry, struct node **result) {
+	int sum = 0;
+	while (head1 != current) {
+		addCarryToRemaining(head1->next, current, carry, result);
+		sum = head1->data + *carry;
+		*carry = sum / 10;
+		sum = sum % 10;
+		push(result, sum);
+	}
+}
+
+void swapPointers(struct node **head1, struct node **head2) {
+	struct node *temp = *head1;
+	*head1 = *head2;
+	*head2 = temp;
+}
+void addList(struct node *head1, struct node *head2, struct node **result) {
+	if (head1 == NULL || head2 == NULL) {
+		*result = (head1 == NULL) ? head2 : head1;
+	} else {
+		int size1 = countNodes(head1);
+		int size2 = countNodes(head2);
+		int carry = 0;
+		if (size1 == size2) {
+			*result = addSameSizeLists(head1, head2, &carry);
+		} else {
+			if (size2 > size1) {
+				swapPointers(&head1, &head2);
+			}
+			int diff = (int) abs(size1 - size2);
+			struct node* current;
+			for (current  = head1; diff--; current = current->next);
+			*result = addSameSizeLists(current, head2, &carry);
+			addCarryToRemaining(head1, current, &carry, result);
+		}
+		if (carry) {
+			push(result, carry);
+		}
+	}
+}
 
 // Flattening a Linked List
 // Given a linked list where every node represents a linked list and contains two pointers of its type:
@@ -805,6 +864,129 @@ NNode *merge(NNode *a, NNode *b) {
 NNode *flatten(NNode *root) {
 	if (root == NULL || root->right == NULL) return root;
 	return merge(root, flatten(root->right));
+}
+
+// Implement LRU Cache
+// How to implement LRU caching scheme? What data structures should be used?
+
+// We are given total possible page numbers that can be referred. 
+// We are also given cache size (Number of page frames that cache can hold at a time). 
+// The LRU caching scheme is to remove the least recently used frame when the cache is full 
+// and a new page is referenced which is not there in cache. 
+// Please see the Galvin book for more details (see the LRU page replacement slide here).
+
+// We use two data structures to implement an LRU Cache.
+
+// 1. A Queue which is implemented using a doubly linked list. The maximum size of the queue will be equal to the total number of frames available (cache size).
+// The most recently used pages will be near front end and least recently pages will be near rear end.
+
+// 2. A Hash with page number as key and address of the corresponding queue node as value.
+
+// TODO
+
+// Given a singly linked list, 
+// rotate the linked list counter-clockwise by k nodes. 
+// Where k is a given positive integer. 
+// For example, if the given linked list is 10->20->30->40->50->60 
+// and k is 4, the list should be modified to 50->60->10->20->30->40. 
+// Assume that k is smaller than the count of nodes in linked list.
+void rotateByK(struct node **headRef, int k) {
+	if (*headRef == NULL || (*headRef)->next == NULL) return;
+	int n = countNodes(*headRef);
+	if (k > n) return;
+	struct node *current = *headRef;
+
+	for (int i = 0; i < k - 1; i++) {
+		current = current->next;
+	}
+
+	struct node *newHead = current->next;
+	current->next = NULL;
+	struct node *end = current;
+
+	while (end->next != NULL) {
+		end = end->next;
+	}
+	end->next = *headRef;
+	*headRef = newHead;
+}
+// Given three linked lists, say a, b and c, 
+// find one node from each list such that the sum of the values of the nodes is equal 
+// to a given number. 
+// For example, if the three linked lists are 12->6->29, 23->5->8 and 90->20->59, 
+// and the given number is 101, the output should be tripel “6 5 90″.
+
+// In the following solutions, size of all three linked lists is assumed same 
+// for simplicity of analysis. 
+// The following solutions work for linked lists of different sizes also.
+
+// A simple method to solve this problem is to run three nested loops. 
+// The outermost loop picks an element from list a, 
+// the middle loop picks an element from b and the innermost loop picks from c. 
+// The innermost loop also checks whether the sum of values of current nodes of a, b and c 
+// is equal to given number. The time complexity of this method will be O(n^3).
+
+// Sorting can be used to reduce the time complexity to O(n*n). 
+// Following are the detailed steps.
+// 1) Sort list b in ascending order, and list c in descending order.
+// 2) After the b and c are sorted, one by one pick an element from list a 
+// and find the pair by traversing both b and c. 
+// See isSumSorted() in the following code. 
+// The idea is similar to Quadratic algorithm of 3 sum problem.
+bool isSumSorted(struct node *headA, struct node *headB, 
+                 struct node *headC, int givenNumber) {
+	struct node *a = headA;
+	while (a != NULL) {
+		struct node *b = headB;
+		struct node *c = headC;
+
+		while (b != NULL && c != NULL) {
+			int sum = a->data + b->data + c->data;
+			if (sum == givenNumber) {
+				printf("Triplet found %d %d %d\n", a->data, b->data, c->data);
+				return true;
+			} else if (sum < givenNumber) {
+				b = b->next;
+			} else {
+				c = c->next;
+			}
+		}
+		a = a->next;
+	}
+	printf("No Such triplet\n");
+	return false;
+}
+
+// XOR Linked List – A Memory Efficient Doubly Linked List
+struct XORnode {
+    int data;
+    struct XORnode *npx;  /* XOR of next and previous node */
+};
+
+struct XORnode *XOR(struct XORnode *a, struct XORnode *b) {
+	return (struct XORnode*) ((unsigned int) (a) ^ (unsigned int) (b));
+}
+
+void insert(struct XORnode **headRef, int data) {
+	struct XORnode *newNode = (struct XORnode*) malloc(sizeof(XORnode));
+	newNode->data = data;
+	newNode->npx = XOR(*headRef, NULL);
+
+	if (*headRef != NULL) {
+		struct XORnode *next = XOR((*headRef)->npx, NULL);
+		(*headRef)->npx = XOR(newNode, next);
+	}
+	*headRef = newNode;
+}
+
+void printXORList(struct XORnode *head) {
+	struct XORnode *current = head, *prev = NULL, *next;
+	while (current != NULL) {
+		cout << current->data << " ";
+		next = XOR(prev, current->npx);
+		prev = current;
+		current = next;
+	}
 }
 
 int main() {
